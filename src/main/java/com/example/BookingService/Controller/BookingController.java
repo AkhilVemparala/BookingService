@@ -5,6 +5,8 @@ import com.example.BookingService.Model.BookingDetails;
 import com.example.BookingService.Model.PassengerDetails;
 import com.example.BookingService.Service.BookingService;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +27,9 @@ public class BookingController {
 
 
     @PostMapping(value = "/{flightId}/{username}", produces = "application/json", consumes = "application/json")
-    @CircuitBreaker(name = "bookingServiceCircuitBreaker", fallbackMethod = "fallbackBookFlight")
+    //@CircuitBreaker(name = "bookingServiceCircuitBreaker", fallbackMethod = "fallbackBookFlight")
+    //@Retry(name = "bookingServiceRetry", fallbackMethod = "fallbackBookFlight")
+    @RateLimiter(name = "bookingServiceRateLimiter", fallbackMethod = "fallbackBookFlight")
     public ResponseEntity<?> bookFlight(@PathVariable("flightId") String flightId,
                                         @Valid @RequestBody PassengerDetails passengerDetails,
                                         @PathVariable("username") String username,
@@ -42,6 +46,7 @@ public class BookingController {
         BookingDetails bookingDetails = bookingService.bookFlight(flightId, passengerDetails, username);
         return new ResponseEntity<>(bookingDetails, HttpStatus.OK);
     }
+    int retryCount = 0;
 
     public ResponseEntity<?> fallbackBookFlight(String flightId, PassengerDetails passengerDetails, String username, Errors errors, Throwable throwable) {
         log.error("Fallback method called for booking flightId: {}, username: {}, error: {}", flightId, username, throwable.getMessage());
@@ -49,6 +54,9 @@ public class BookingController {
 //                new BookingServiceException("Booking service is currently unavailable. Please try again later."),
 //                HttpStatus.SERVICE_UNAVAILABLE
 //        );
+        retryCount++;
+        log.error("Retry count {}", retryCount);
+
 
         return ResponseEntity
                 .status(HttpStatus.SERVICE_UNAVAILABLE)

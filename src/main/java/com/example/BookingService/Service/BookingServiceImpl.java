@@ -101,7 +101,7 @@ public class BookingServiceImpl implements BookingService {
             ResponseEntity<Flight> response = flightClient.getFlightDetails(flightId);
             return response.getBody();
         } catch (Exception ex) {
-            log.error("Error calling flight service: {}", ex.getMessage(), ex);
+            log.error("Error calling flight service: {}", ex.getMessage());
             throw new BookingServiceException("Unable to fetch flight details from Flights microservice.");
         }
     }
