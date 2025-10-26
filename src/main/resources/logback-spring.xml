@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+  <!-- Log directory path and application name -->
+  <property name="LOG_PATH" value="D:/GITHUB/logs/" />
+  <springProperty scope="context" name="APPLICATION_NAME" source="spring.application.name" />
+
+  <!-- Console Appender (STDOUT) -->
+<!--  <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">-->
+<!--    <withJansi>true</withJansi>-->
+<!--    <encoder>-->
+<!--      <pattern>-->
+<!--        %highlight(%d{yyyy-MM-dd HH:mm:ss.SSS}) [%thread]-->
+<!--        &lt;!&ndash; [rootId: %X{ROOTID:-}] parentId: %X{PARENTID:-} eventId: %X{EVENTID:-} &ndash;&gt;-->
+<!--        %highlight(%-5level) %cyan(%logger{36}) - %msg%n-->
+<!--      </pattern>-->
+<!--    </encoder>-->
+<!--  </appender>-->
+
+  <!-- Rolling File Appender -->
+  <appender name="FILE_APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>${LOG_PATH}${APPLICATION_NAME}-${HOSTNAME:-localhost}.%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+      <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+        <maxFileSize>50MB</maxFileSize>
+      </timeBasedFileNamingAndTriggeringPolicy>
+    </rollingPolicy>
+    <encoder>
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+
+<!--  &lt;!&ndash; Logstash Appender (for ELK) &ndash;&gt;-->
+<!--  <springProfile name="logstash">-->
+<!--    <appender name="LOGSTASH_APPENDER" class="net.logstash.logback.appender.LogstashTcpSocketAppender">-->
+<!--      <destination>${LOGSTASH_HOST:-localhost}:${LOGSTASH_PORT:-5000}</destination>-->
+<!--      <encoder class="net.logstash.logback.encoder.LogstashEncoder">-->
+<!--        &lt;!&ndash;-->
+<!--        <includeMdcKeyName>ROOTID</includeMdcKeyName>-->
+<!--        <includeMdcKeyName>PARENTID</includeMdcKeyName>-->
+<!--        <includeMdcKeyName>EVENTID</includeMdcKeyName>-->
+<!--        &ndash;&gt;-->
+<!--      </encoder>-->
+<!--    </appender>-->
+<!--  </springProfile>-->
+
+  <!-- Root Logger -->
+  <root level="INFO">
+<!--    <appender-ref ref="STDOUT" />-->
+    <appender-ref ref="FILE_APPENDER" />
+<!--    <springProfile name="logstash">-->
+<!--      <appender-ref ref="LOGSTASH_APPENDER" />-->
+<!--    </springProfile>-->
+  </root>
+
+</configuration>

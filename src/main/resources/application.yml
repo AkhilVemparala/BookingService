@@ -2,47 +2,62 @@ server:
   port: 8088
 spring:
   application:
-    name: BookingService   # Name of the microservice
-  datasource:
-    url: jdbc:mysql://localhost:3306/akhil
-    username: root
-    password: flgmp
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    jpa:
-      hibernate:
-        ddl-auto: update   # Or validate / create / none / create-drop
-      show-sql: true
-      database-platform: org.hibernate.dialect.MySQL8Dialect
+    name: BookingService
+  config:
+    import: optional:configserver:http://localhost:8082
   cloud:
     discovery:
       enabled: true
-    openfeign:
-      client:
-        config:
-          default:
-            connectTimeout: 5000
-            readTimeout: 5000
-            loggerLevel: full
-
-eureka:
-  client:
-    register-with-eureka: true
-    fetch-registry: true
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
-    hostname: localhost
+#    openfeign:
+#      client:
+#        config:
+#          default:
+#            connectTimeout: 5000
+#            readTimeout: 5000
+#            loggerLevel: full
 
 management:
+  health:
+    circuitbreakers:
+      enabled: true
   endpoints:
     web:
       exposure:
         include: "*"
-
+  endpoint:
+    health:
+      show-details: always
+resilience4j:
+  circuitbreaker:
+    instances:
+      bookingServiceCircuitBreaker:
+        register-health-indicator: true
+        sliding-window-type: COUNT_BASED
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        permitted-number-of-calls-in-half-open-state: 3
+        wait-duration-in-open-state: 6s
+        failure-rate-threshold: 50
+        event-consumer-buffer-size: 10
+        automatic-transition-from-open-to-half-open-enabled: true
+  retry:
+    instances:
+      bookingServiceRetry:
+        max-attempts: 3
+        wait-duration: 6s
+        retryExceptions:
+          - feign.FeignException$ServiceUnavailable
+          - feign.FeignException$InternalServerError
+  RateLimiter:
+    instances:
+      bookingServiceRateLimiter:
+        limit-for-period: 2
+        limit-refresh-period: 10s
+        limit-for-period-in-nanos: 1000000000
+        timeout-duration: 0s
 logging:
   level:
     org.springframework: INFO
     com.netflix.discovery: DEBUG
     org.springframework.cloud: DEBUG
-
+    io.github.resilience4j.retry: DEBUG
