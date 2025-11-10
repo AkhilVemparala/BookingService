@@ -1,7 +1,3 @@
-````
-
----
-
 ## 🧩 **2️⃣ BookingService – README.md**
 
 ```markdown
